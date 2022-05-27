@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { interval, observable, Observable, Subscription } from "rxjs";
+import { Observable, Subscriber, Subscription, TeardownLogic } from "rxjs";
 
 @Component({
   selector: "app-home",
@@ -12,17 +12,26 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor() {}
 
   ngOnInit() {
-    const customIntervalObservable = new Observable<string>((observer) => {
-      let count = 0;
-      const interval = 1000;
-      setInterval(() => {
-        observer.next(`${count / interval}`);
-        if (count === 4000) observer.complete();
-        // error can return a diferent T than Observable<T>
-        if (count === 6000) observer.error(count / interval);
-        count += interval;
-      }, interval);
-    });
+    const customIntervalObservable = new Observable<string>(
+      (observer: Subscriber<string>): TeardownLogic => {
+        let count = 0;
+        const interval = 1000;
+        const intevalId = setInterval(() => {
+          observer.next(`${count / interval}`);
+          if (count === 4000) observer.complete();
+          // error can return a diferent T than Observable<T>
+          if (count === 6000) observer.error(count / interval);
+          count += interval;
+        }, interval);
+
+        // gets triggered when the obserbable finish
+        // via error or complete
+        return () => {
+          clearInterval(intevalId);
+          console.log("Interval cleaned Cleaned");
+        };
+      }
+    );
 
     this.subscribeReference = customIntervalObservable.subscribe({
       next: (count) => console.log(count),
