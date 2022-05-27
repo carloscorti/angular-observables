@@ -7,6 +7,7 @@ import {
   Subscription,
   TeardownLogic,
 } from "rxjs";
+import { StateService } from "../service/state.service";
 
 @Component({
   selector: "app-home",
@@ -15,8 +16,10 @@ import {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   private subscribeReference!: Subscription;
+  private subscribeStateReference!: Subscription;
+  isActiveState = false;
 
-  constructor() {}
+  constructor(private stateService: StateService) {}
 
   ngOnInit() {
     const customIntervalObservable = new Observable<string>(
@@ -54,9 +57,21 @@ export class HomeComponent implements OnInit, OnDestroy {
         error: (error) => console.log("error", error),
         complete: () => console.log("count complete"),
       });
+
+    this.isActiveState = this.stateService.getState();
+    this.subscribeStateReference = this.stateService
+      .stateSubscriptionChannel()
+      .subscribe((state) => {
+        this.isActiveState = state;
+      });
   }
 
   ngOnDestroy(): void {
     this.subscribeReference.unsubscribe();
+    this.subscribeStateReference.unsubscribe();
+  }
+
+  onHomeButtonClick() {
+    this.stateService.stateForecastChannel(!this.isActiveState);
   }
 }
