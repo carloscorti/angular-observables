@@ -1,5 +1,12 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Observable, Subscriber, Subscription, TeardownLogic } from "rxjs";
+import {
+  filter,
+  map,
+  Observable,
+  Subscriber,
+  Subscription,
+  TeardownLogic,
+} from "rxjs";
 
 @Component({
   selector: "app-home",
@@ -33,11 +40,20 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
     );
 
-    this.subscribeReference = customIntervalObservable.subscribe({
-      next: (count) => console.log(count),
-      error: (error) => console.log("error", error),
-      complete: () => console.log("count complete"),
-    });
+    this.subscribeReference = customIntervalObservable
+      .pipe(
+        // you can parse the returned value from Observable<T> to Observable<B> with pipes
+        // in this case we define new Observable<string>, but as map parses it into number
+        // it parse into Observable<number>
+        // is kind of creatind a new observable in to of the original one
+        map((count) => Number(count)),
+        filter((count) => count % 2 === 0)
+      )
+      .subscribe({
+        next: (count) => console.log(count),
+        error: (error) => console.log("error", error),
+        complete: () => console.log("count complete"),
+      });
   }
 
   ngOnDestroy(): void {
